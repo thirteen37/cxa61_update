@@ -528,6 +528,9 @@ class SerialPort:
                 except OSError:
                     pass
             termios.tcflush(self.fd, termios.TCIOFLUSH)
+        except termios.error as e:
+            os.close(self.fd)
+            raise UpdateError("%s is not a usable serial port (%s)." % (path, e.args[-1]))
         except Exception:
             os.close(self.fd)
             raise
