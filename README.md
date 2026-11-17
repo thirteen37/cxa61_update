@@ -1,7 +1,7 @@
 # cxa61_update
 
-Update the firmware of a Cambridge Audio **CXA61** or **CXA81** amplifier from
-macOS or Linux. Cambridge Audio's own updater only runs on Windows.
+Update the firmware of a Cambridge Audio **CXA61** amplifier from macOS or
+Linux. Cambridge Audio's own updater only runs on Windows.
 
 This is a Python port of the update procedure in Cambridge Audio's
 "CXAx1 Updater to MCU v4.0" (AP364281, which identifies itself as
@@ -10,8 +10,8 @@ firmware out of it and talks to the amp over its RS232 port.
 
 > [!WARNING]
 > **Tested on one amplifier so far:** a CXA61 was updated from main MCU 3.0
-> to 4.0 from macOS. That is a single unit; the CXA81 has not been tried
-> (details under [Status](#status)). Flashing firmware can leave a device unusable. This is an
+> to 4.0 from macOS. That is a single unit and a single run (details under
+> [Status](#status)). Flashing firmware can leave a device unusable. This is an
 > unofficial tool with no warranty: if you use it, you do so at your own risk.
 > If you have access to a Windows PC or VM, the vendor updater is the safer
 > choice.
@@ -24,7 +24,6 @@ Unofficial. Not affiliated with, endorsed by, or supported by Cambridge Audio.
 |---|---|
 | Sends the same bytes as the vendor updater (simulated amp) | Verified |
 | CXA61, real hardware | Updated successfully: main MCU 3.0 to 4.0 (one unit, from macOS) |
-| CXA81, real hardware | Not yet tried |
 | Starting with the amp already on | Tested on real hardware |
 | Starting with the amp in standby (script switches it on) | Simulated amp only |
 | Recovery after an interrupted or failed run | Simulated amp only |
@@ -62,7 +61,7 @@ on). `update` asks for confirmation before changing anything.
 ## Getting the firmware
 
 This repository contains no Cambridge Audio software or firmware, and none
-should be added to it. Ask Cambridge Audio support for the CXA61/CXA81 updater
+should be added to it. Ask Cambridge Audio support for the CXA61 updater
 and pass the `.exe` you receive to the script. Nothing in the `.exe` is
 executed; the script only reads the firmware image stored inside it.
 
@@ -100,8 +99,8 @@ The sequence is the vendor updater's.
 
 1. **Find the amp.** It must answer with one of the two product codes the
    vendor updater accepts, `CA0877` or `CA0837`. A real CXA61 reports `CA0877`;
-   `CA0837` is presumably the CXA81, which is unconfirmed. The amp is switched
-   on if it is in standby, and source A1 is selected.
+   which model reports `CA0837` is not known. The amp is switched on if it is
+   in standby, and source A1 is selected.
 2. **Read versions:** what the amp is running, and what is staged in its
    internal flash store.
 3. **Stage 1 - copy the image into the flash store**, one 4 KB page at a time,
@@ -190,8 +189,8 @@ FTDI cable, and works afterwards. From that run's transcript:
   after the restart is the likely cause; treat that read-back as confirming
   the MCU version only.
 
-That is one unit and one run. The CXA81, the power-on-from-standby path and
-the error paths have not been exercised on real hardware.
+That is one unit and one run. The power-on-from-standby path and the error
+paths have not been exercised on real hardware.
 
 ## Protocol notes
 
@@ -218,10 +217,10 @@ descriptive guesses.
 
 ## Reporting results
 
-Reports from real hardware are the most useful contribution, especially from a
-CXA81 or from Linux. Please open an issue and include:
+Reports from real hardware are the most useful contribution, especially from
+Linux or from an amp that reports `CA0837`. Please open an issue and include:
 
-- model (CXA61 or CXA81) and the versions `probe` showed before and after;
+- the model, the product code and the versions `probe` showed before and after;
 - operating system and the cable or chipset used, and whether it needed a
   null-modem adapter;
 - the `cxa_update_<time>.log` transcript.
@@ -231,8 +230,8 @@ Please do not attach or link the vendor updater or firmware.
 ## Disclaimer
 
 This software is provided as is, without warranty of any kind. The authors are
-not responsible for damage to your equipment. Cambridge Audio, CXA61 and CXA81
-are trademarks of their respective owner, used here only to say what this tool
+not responsible for damage to your equipment. Cambridge Audio and CXA61 are
+trademarks of their respective owner, used here only to say what this tool
 works with.
 
 ## License

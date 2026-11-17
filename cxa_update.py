@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 cxa_update.py - macOS / Linux port of Cambridge Audio's Windows-only
-"CXAx1 Updater to MCU v4.0" (AP364281) for the CXA61 and CXA81 amplifiers.
+"CXAx1 Updater to MCU v4.0" (AP364281) for the CXA61 amplifier.
 
 The logic here was ported from the vendor's .NET updater
 (AP364281_Cambridge_CXAx1_Updater_to_MCU_v4.0.exe, "CXAx1 Upgrader v2.0"),
@@ -278,7 +278,7 @@ def extract_hex_from_exe(data):
             found.append(text)
     if not found:
         raise UpdateError("No firmware image found inside this file. Is it a Cambridge Audio "
-                          "CXA61/CXA81 updater program?")
+                          "CXA61 updater program?")
     if len(found) > 1:
         raise UpdateError("This updater contains %d separate firmware images; this script only "
                           "knows the single-image kind. Not using it." % len(found))
@@ -751,8 +751,8 @@ def identify(port, log):
 
 
 # Product codes the vendor updater accepts.  A real CXA61 reports CA0877; which
-# model reports CA0837 has not been confirmed (presumably the CXA81).
-MODEL_NAMES = {"CA0877": "CXA61", "CA0837": "CXA61/CXA81"}
+# model reports CA0837 is not known.
+MODEL_NAMES = {"CA0877": "CXA61"}
 
 
 def open_and_identify(args, log):
@@ -774,12 +774,12 @@ def open_and_identify(args, log):
         code = identify(port, log)
         if code:
             say(log, "Found %s (%s) on %s at %d baud."
-                % (MODEL_NAMES.get(code, "CXA61/CXA81"), code, path, args.baud))
+                % (MODEL_NAMES.get(code, "amplifier"), code, path, args.baud))
             return port, code
         port.close()
-        say(log, "  %s: no CXA61/CXA81 answered." % path)
+        say(log, "  %s: no amplifier answered." % path)
     raise UpdateError(
-        "Could not detect a CXA61 or CXA81 on any serial port.\n"
+        "Could not detect a CXA61 on any serial port.\n"
         "Check that the amp has mains power, that the cable is in its RS232 socket, and\n"
         "that it is a straight-through cable (a null-modem / crossed cable will not work).")
 
@@ -1278,7 +1278,7 @@ def cmd_update(args, log):
 
 def main(argv=None):
     p = argparse.ArgumentParser(
-        description="Cambridge Audio CXA61/CXA81 firmware updater for macOS/Linux. Reads the firmware out of the vendor updater .exe.")
+        description="Cambridge Audio CXA61 firmware updater for macOS/Linux. Reads the firmware out of the vendor updater .exe.")
     p.add_argument("command", choices=["info", "ports", "probe", "update", "extract"],
                    help="info: show what is in the updater/firmware file; ports: list serial ports; "
                         "probe: read the amp's versions; update: perform the update; "
