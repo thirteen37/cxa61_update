@@ -204,3 +204,8 @@ This software is provided as is, without warranty of any kind. The authors are
 not responsible for damage to your equipment. Cambridge Audio, CXA61 and CXA81
 are trademarks of their respective owner, used here only to say what this tool
 works with.
+
+## License
+
+[MIT](LICENSE). The licence covers the code in this repository only, not
+Cambridge Audio's updater or firmware, which are not included.
