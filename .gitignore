@@ -1,0 +1,12 @@
+# Vendor binaries and firmware are deliberately not part of this repository.
+*.exe
+*.hex
+*.bin
+
+# Run transcripts
+cxa_update_*.log
+*.log
+
+__pycache__/
+*.pyc
+.DS_Store
