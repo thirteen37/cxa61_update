@@ -25,7 +25,7 @@ Unofficial. Not affiliated with, endorsed by, or supported by Cambridge Audio.
 | Sends the same bytes as the vendor updater (simulated amp) | Verified |
 | CXA61, real hardware | Updated successfully (one unit, from macOS) |
 | CXA81, real hardware | Not yet tried |
-| macOS | Tested: a full update of a real CXA61 over a USB-to-RS232 cable |
+| macOS | Tested: a full update of a real CXA61 over a straight-through FTDI USB-to-RS232 cable |
 | Linux | Tested against the simulated amp only, with a pseudo-terminal in place of a serial cable |
 
 If you try it on other hardware, please open an issue with the result, whether
@@ -49,10 +49,10 @@ on). `update` asks for confirmation before changing anything.
 
 - **Python 3.8 or newer.** Standard library only; there is nothing to install.
 - **The vendor updater `.exe`.** See [Getting the firmware](#getting-the-firmware).
-- **A USB-to-RS232 cable** in the amp's RS232 socket. Cambridge's instructions
-  point to FTDI drivers, so an FTDI-based cable is the safe choice. Whether the
-  CXA needs a straight-through or a null-modem cable is not confirmed; if
-  `probe` gets no answer, try a null-modem adapter.
+- **A straight-through USB-to-RS232 cable** in the amp's RS232 socket. An
+  FTDI-based straight-through cable is what the successful CXA61 update used,
+  and FTDI is what Cambridge's instructions point to. No null-modem adapter is
+  needed.
 - **Linux:** permission to use the serial device, usually membership of the
   `dialout` group (`uucp` on Arch).
 
@@ -117,8 +117,9 @@ Expect roughly 5-10 minutes at 9600 baud.
 - **During stage 2:** do not switch the amp off. It is reprogramming itself and
   no longer depends on the computer. Wait until the front panel is back to
   normal, then run `probe` to see which versions it reports.
-- **`probe` finds nothing:** check that the amp has mains power, the cable is
-  in the RS232 socket, and try a null-modem adapter.
+- **`probe` finds nothing:** check that the amp has mains power, that the cable
+  is in the RS232 socket, and that it is a straight-through cable rather than a
+  null-modem one. `ports` shows which serial devices the script can see.
 
 ## Other updater versions
 

@@ -778,8 +778,7 @@ def open_and_identify(args, log):
     raise UpdateError(
         "Could not detect a CXA61 or CXA81 on any serial port.\n"
         "Check that the amp has mains power, that the cable is in its RS232 socket, and\n"
-        "that the cable is of the right kind (if a straight cable gets no answer, the\n"
-        "usual cause is that TX/RX need crossing - try a null-modem adapter).")
+        "that it is a straight-through cable (a null-modem / crossed cable will not work).")
 
 
 def power_on(port, log, allow_switch_on=True):
