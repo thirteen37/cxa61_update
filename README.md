@@ -9,12 +9,12 @@ This is a Python port of the update procedure in Cambridge Audio's
 firmware out of it and talks to the amp over its RS232 port.
 
 > [!WARNING]
-> **This has not been run against a real amplifier yet.** It has only been
-> verified against a simulated one (details under
-> [Verification](#verification)). Flashing firmware can leave a device
-> unusable. This is an unofficial tool with no warranty: if you use it, you do
-> so at your own risk. If you have access to a Windows PC or VM, the vendor
-> updater is the safer choice.
+> **Tested on one amplifier so far:** a CXA61 was updated successfully from
+> macOS. That is a single unit; the CXA81 has not been tried (details under
+> [Status](#status)). Flashing firmware can leave a device unusable. This is an
+> unofficial tool with no warranty: if you use it, you do so at your own risk.
+> If you have access to a Windows PC or VM, the vendor updater is the safer
+> choice.
 
 Unofficial. Not affiliated with, endorsed by, or supported by Cambridge Audio.
 
@@ -23,12 +23,12 @@ Unofficial. Not affiliated with, endorsed by, or supported by Cambridge Audio.
 | | |
 |---|---|
 | Sends the same bytes as the vendor updater (simulated amp) | Verified |
-| Linux | Tested, with a pseudo-terminal in place of a serial cable |
-| macOS | Not yet run |
-| Real USB-to-RS232 cable | Not yet tried |
-| Real CXA61 / CXA81 | Not yet tried |
+| CXA61, real hardware | Updated successfully (one unit, from macOS) |
+| CXA81, real hardware | Not yet tried |
+| macOS | Tested: a full update of a real CXA61 over a USB-to-RS232 cable |
+| Linux | Tested against the simulated amp only, with a pseudo-terminal in place of a serial cable |
 
-If you try it on real hardware, please open an issue with the result, whether
+If you try it on other hardware, please open an issue with the result, whether
 it worked or not. See [Reporting results](#reporting-results).
 
 ## Quick start
@@ -160,8 +160,11 @@ amplifier firmware, and passing against it proves nothing about a real amp.
   page (the update stops before stage 2), no completion report, and damaged
   images.
 
-What this does not show: that a real amplifier answers the way the simulated
-one does. The amplifier's side of the protocol is undocumented.
+The comparison above only shows that the port is faithful to the vendor
+updater; the amplifier's side of the protocol is undocumented. Since then a
+real CXA61 has been updated with the script from macOS and works afterwards.
+That is one unit and one run: the CXA81, and the error paths on real hardware,
+remain untested.
 
 ## Protocol notes
 
@@ -188,8 +191,8 @@ descriptive guesses.
 
 ## Reporting results
 
-Reports from real hardware are the most useful contribution. Please open an
-issue and include:
+Reports from real hardware are the most useful contribution, especially from a
+CXA81 or from Linux. Please open an issue and include:
 
 - model (CXA61 or CXA81) and the versions `probe` showed before and after;
 - operating system and the cable or chipset used, and whether it needed a
