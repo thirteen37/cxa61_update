@@ -9,7 +9,8 @@ without an amplifier (and for testing it).
 
 It answers the way the vendor's updater expects an amplifier to answer.  The
 amplifier side of the protocol is not documented; this is a model inferred from
-the updater program, not a copy of real amplifier firmware.
+the updater program and from one transcript of a real CXA61 being updated, not
+a copy of real amplifier firmware.
 """
 
 import argparse
@@ -162,18 +163,26 @@ class FakeAmp:
             self.finish_update(0.5)
 
     def start_update(self, mask):
-        t = 0.05
-        self.send(bytes([0x21, 0x0F, 0xD0, 0x01, mask]), t)
-        code = 0xD5 if self.args.finish == "d5" else 0xD7
+        a = self.args
+        t = 0.1
+        self.send(bytes([0x21, 0x0F, 0xD0, 0x00]), t)
+        if a.finish == "progress":
+            # What a real CXA61 was seen to do: 0%, a silent pause, 1..78%, then
+            # 100%; a few seconds later it has restarted into standby.
+            t += 0.25
+            self.send(bytes([0x21, 0x0F, 0xD5, 0x01, 0]), t)
+            t += a.reflash
+            for pct in list(range(1, 79)) + [100]:
+                t += a.step / 5
+                self.send(bytes([0x21, 0x0F, 0xD5, 0x01, pct]), t)
+            self.pending.append((time.monotonic() + t, "apply"))
+            self.pending.append((time.monotonic() + t + 4.0, "standby"))
+            return
         for pct in range(0, 101, 10):
-            t += self.args.step
-            self.send(bytes([0x21, 0x0F, code, 0x01, pct]), t)
-        if self.args.finish == "d5":
-            self.apply_store()
-        elif self.args.finish == "silent":
-            pass
-        else:
-            self.finish_update(t + self.args.reflash)
+            t += a.step
+            self.send(bytes([0x21, 0x0F, 0xD7, 0x01, pct]), t)
+        if a.finish == "reset":
+            self.finish_update(t + a.reflash)
 
     def apply_store(self):
         self.cur.update(self.stored_versions())
@@ -215,20 +224,28 @@ class FakeAmp:
             if data is None:
                 self.apply_store()
                 self.out += b"#02,01,1\r"
+            elif data == "apply":
+                self.apply_store()
+            elif data == "standby":
+                self.on = False
+                self.out += b"#02,01,0\r"
             else:
                 self.out += data
 
 
 def main():
     p = argparse.ArgumentParser(description="Pretend CXA61 on a pseudo-terminal.")
-    p.add_argument("--model", default="CA0837", help="CA0837 = CXA61 (default), CA0877 = CXA81")
+    p.add_argument("--model", default="CA0877",
+                   help="product code to report: CA0877 (what a real CXA61 reports, default) or CA0837")
     p.add_argument("--mcu", type=int, nargs=2, default=[1, 2], metavar=("MAJOR", "MINOR"),
                    help="main MCU version the pretend amp starts with (default 1 2)")
     p.add_argument("--usb", type=int, nargs=2, default=[1, 1], metavar=("MAJOR", "MINOR"))
     p.add_argument("--standby", action="store_true", help="start in standby")
     p.add_argument("--max-block", type=int, default=128)
-    p.add_argument("--finish", choices=["reset", "d5", "silent"], default="reset",
-                   help="how the pretend amp reports the end of the self-update")
+    p.add_argument("--finish", choices=["progress", "reset", "silent"], default="progress",
+                   help="how the pretend amp ends the self-update: progress = percent reports up to "
+                        "100 then restart into standby, as seen on a real CXA61 (default); "
+                        "reset = only a power-state message after restarting; silent = never reports")
     p.add_argument("--step", type=float, default=0.15, help="seconds between progress reports")
     p.add_argument("--reflash", type=float, default=3.0, help="seconds of silence while 'reprogramming'")
     p.add_argument("--link", help="also create this symlink to the pseudo-terminal")
@@ -255,7 +272,7 @@ def main():
             os.unlink(args.link)
         os.symlink(path, args.link)
         path = args.link
-    print("Pretend %s ready on: %s" % ("CXA81" if args.model == "CA0877" else "CXA61", path))
+    print("Pretend amplifier (%s) ready on: %s" % (args.model, path))
     print("  python3 cxa_update.py probe --port %s" % path)
     print("Ctrl-C to stop.")
     sys.stdout.flush()

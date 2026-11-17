@@ -9,9 +9,9 @@ This is a Python port of the update procedure in Cambridge Audio's
 firmware out of it and talks to the amp over its RS232 port.
 
 > [!WARNING]
-> **Tested on one amplifier so far:** a CXA61 was updated successfully from
-> macOS. That is a single unit; the CXA81 has not been tried (details under
-> [Status](#status)). Flashing firmware can leave a device unusable. This is an
+> **Tested on one amplifier so far:** a CXA61 was updated from main MCU 3.0
+> to 4.0 from macOS. That is a single unit; the CXA81 has not been tried
+> (details under [Status](#status)). Flashing firmware can leave a device unusable. This is an
 > unofficial tool with no warranty: if you use it, you do so at your own risk.
 > If you have access to a Windows PC or VM, the vendor updater is the safer
 > choice.
@@ -23,8 +23,11 @@ Unofficial. Not affiliated with, endorsed by, or supported by Cambridge Audio.
 | | |
 |---|---|
 | Sends the same bytes as the vendor updater (simulated amp) | Verified |
-| CXA61, real hardware | Updated successfully (one unit, from macOS) |
+| CXA61, real hardware | Updated successfully: main MCU 3.0 to 4.0 (one unit, from macOS) |
 | CXA81, real hardware | Not yet tried |
+| Starting with the amp already on | Tested on real hardware |
+| Starting with the amp in standby (script switches it on) | Simulated amp only |
+| Recovery after an interrupted or failed run | Simulated amp only |
 | macOS | Tested: a full update of a real CXA61 over a straight-through FTDI USB-to-RS232 cable |
 | Linux | Tested against the simulated amp only, with a pseudo-terminal in place of a serial cable |
 
@@ -95,19 +98,23 @@ python3 cxa_update.py extract FILE   # save the embedded image as a .hex file
 
 The sequence is the vendor updater's.
 
-1. **Find the amp.** It must identify itself as a CXA61 (`CA0837`) or CXA81
-   (`CA0877`). It is switched on if it is in standby, and source A1 is selected.
+1. **Find the amp.** It must answer with one of the two product codes the
+   vendor updater accepts, `CA0877` or `CA0837`. A real CXA61 reports `CA0877`;
+   `CA0837` is presumably the CXA81, which is unconfirmed. The amp is switched
+   on if it is in standby, and source A1 is selected.
 2. **Read versions:** what the amp is running, and what is staged in its
    internal flash store.
 3. **Stage 1 - copy the image into the flash store**, one 4 KB page at a time,
    skipping pages whose CRC already matches. The amp then computes the CRC of
    each stored image and the script compares it with the file. The firmware the
    amp runs from is not touched in this stage.
-4. **Stage 2 - the amp reprograms itself from the store** and reboots. The
-   script sends the trigger and then only watches.
+4. **Stage 2 - the amp reprograms itself from the store**, reporting progress
+   as a percentage, and then restarts into standby. The script sends the
+   trigger and then only watches.
 
-Start with the amp in standby: that is the path the vendor updater takes.
-Expect roughly 5-10 minutes at 9600 baud.
+The whole run takes about five minutes at 9600 baud. On the CXA61 that was
+updated, stage 1 took about four minutes for 50 pages and stage 2 about 30
+seconds.
 
 ## If something goes wrong
 
@@ -136,7 +143,7 @@ flag without first checking that the procedure is unchanged.
 
 ## Trying it without an amplifier
 
-`fake_cxa.py` is a pretend CXA61 on a pseudo-terminal:
+`fake_cxa.py` is a pretend amplifier on a pseudo-terminal:
 
 ```
 python3 fake_cxa.py                                # prints a device path
@@ -145,8 +152,9 @@ python3 cxa_update.py update FILE --port <that path>
 
 It can start in standby, report other versions, stop answering part-way, or
 store a page wrongly, to exercise the error handling (`--help` lists the
-options). Its behaviour is inferred from the vendor updater; it is not real
-amplifier firmware, and passing against it proves nothing about a real amp.
+options). Its behaviour is inferred from the vendor updater and from the
+transcript of the one real update; it is not real amplifier firmware, and
+passing against it proves nothing about a real amp.
 
 ## Verification
 
@@ -162,10 +170,28 @@ amplifier firmware, and passing against it proves nothing about a real amp.
   images.
 
 The comparison above only shows that the port is faithful to the vendor
-updater; the amplifier's side of the protocol is undocumented. Since then a
-real CXA61 has been updated with the script from macOS and works afterwards.
-That is one unit and one run: the CXA81, and the error paths on real hardware,
-remain untested.
+updater; the amplifier's side of the protocol is undocumented.
+
+### On real hardware
+
+One CXA61 has been updated with the script, from macOS over a straight-through
+FTDI cable, and works afterwards. From that run's transcript:
+
+- Before: main MCU 3.0, USB Audio 1.1, front panel MCU 0.7, Bluetooth 6.1.05.
+  After: main MCU 4.0, the rest unchanged.
+- The amp was already switched on when the run started.
+- 50 of the 66 pages needed writing; the amp accepted 128-byte blocks, and its
+  CRC of both stored images matched the file before stage 2 began.
+- In stage 2 the amp acknowledged the trigger, was silent for about eight
+  seconds, reported progress from 1% to 100% over about 18 seconds, and then
+  restarted into standby.
+- Read back a few seconds after the restart, the amp reported the new MCU
+  version, but no stored images and no Bluetooth version. Reading too soon
+  after the restart is the likely cause; treat that read-back as confirming
+  the MCU version only.
+
+That is one unit and one run. The CXA81, the power-on-from-standby path and
+the error paths have not been exercised on real hardware.
 
 ## Protocol notes
 
@@ -184,7 +210,7 @@ remain untested.
 | `!AA 0A n+2 seq data[n] crc8` | `!AA 8A 01 nextseq` | program data |
 | `!0F 91 00` / `!0F 92 00` | `!0F 11 ...` / `!0F 12 ...` | running / stored versions |
 | `!0F 89 00` | `!0F 09 07 ...` | status, bootloader versions |
-| `!0F 50 01 mask` | `!0F Dx 01 percent` | update from store (`01` main MCU, `02` front panel MCU, `20` Bluetooth) |
+| `!0F 50 01 mask` | `!0F D0 00`, then `!0F D5 01 percent` | update from store (`01` main MCU, `02` front panel MCU, `20` Bluetooth); the vendor updater also accepts `D7` and `D8` progress reports |
 | `!0F AA 00` | | reboot |
 
 This table is what the vendor updater sends and expects; the names are

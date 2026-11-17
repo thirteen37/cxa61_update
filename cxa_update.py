@@ -38,7 +38,8 @@ What "update" does (same sequence as the vendor tool):
      touched in this stage, so it can be interrupted and simply run again.
   4. Stage 2 - tells the amp to reprogram its MCU from the store.  The amp does
      this by itself (front panel: A1, PROTECTION, MUTE and D2 lit, SPEAKER A/B
-     flashing) and then reboots.  DO NOT SWITCH THE AMP OFF DURING THIS STAGE.
+     flashing), reporting progress as it goes, and then restarts into standby.
+     DO NOT SWITCH THE AMP OFF DURING THIS STAGE.
 
 Serial protocol summary (9600 8N1, no flow control)
 
@@ -749,7 +750,9 @@ def identify(port, log):
     return m.group(1).decode()
 
 
-MODEL_NAMES = {"CA0837": "CXA61", "CA0877": "CXA81"}
+# Product codes the vendor updater accepts.  A real CXA61 reports CA0877; which
+# model reports CA0837 has not been confirmed (presumably the CXA81).
+MODEL_NAMES = {"CA0877": "CXA61", "CA0837": "CXA61/CXA81"}
 
 
 def open_and_identify(args, log):
@@ -771,7 +774,7 @@ def open_and_identify(args, log):
         code = identify(port, log)
         if code:
             say(log, "Found %s (%s) on %s at %d baud."
-                % (MODEL_NAMES.get(code, "CXA"), code, path, args.baud))
+                % (MODEL_NAMES.get(code, "CXA61/CXA81"), code, path, args.baud))
             return port, code
         port.close()
         say(log, "  %s: no CXA61/CXA81 answered." % path)
